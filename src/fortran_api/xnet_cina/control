@@ -1,0 +1,108 @@
+# 3 Line Problem Description
+2000 timesteps
+diagnostic level 1
+New parameters
+# Control Parameters
+1          Initial Zone
+1          # of Zones
+5000      Max. number of timesteps before quit
+5         Max. iterations per step
+0         Diagnostic Output Level
+3         Per Timestep Output Level
+1         Include Weak Reactions (yes=1,no=0,only=-1)
+1         Include Screening (yes=1)
+0         Convergence Condition (Mass Cons.=0, (dY/Y small)=1)
+1.00E-01  Max. Abundance Change per timestep 
+1.00E-07  Smallest Abundance used in timestep calculation
+1.00E-06  Mass Conservation Limit
+1.00E-04  Convergence Criterion
+1.00E-25  Lower Abundance limit, smaller abundances =0
+2.00E+00  Max. Factor to change dt in a timestep
+# ASCII output filename root, network will append zone number
+ev
+# Binary output filename root, network will append zone number
+tso
+# Nuclear Data Directory
+../Data_R-process_2012
+# Initial Abundance and Thermodynamic Trajectory Files
+../Data_R-process_2012/ab_ye26
+th_mb_s200t010
+../Data_R-process_2012/ab_ye44
+th_pj_s200t015
+../Data_R-process_2012/ab_ye18
+th_mb_s020t010
+../xray_burst_65/fisker_full_abund
+../xray_burst_65/XRB07_65/1
+Data_alpha/ab_timmes
+th_constant
+Data_alpha+np/ab_he
+th_constant
+Data_alpha/ab_co
+th_const
+Data_Star_ili_Ca/ab_init_P95
+N125_070600/th_02n
+Data_Beun2/ab_ye35
+Data_Beun2/th_new_1a
+Data_Si02/ab_he
+../Rosswog/test_trajectories/th_rosswog_1
+Data_Star_ili_Ge/ab_he
+../Rosswog/test_trajectories/th_rosswog_1
+Data_Star_ili_Ge/ab_solar
+Data_Fisker/th_aboveign_b1
+Data_Star_ili_Ge/ab_init_P95
+N125_070600/th_05
+../Austin/ab_i2001
+../Austin/th_S15_c01-02001
+../Austin/ab_i2001
+../Austin/th_S15_c005-02001
+../Austin/ab_i2001
+../Austin/th_S15_c001-02001
+../Austin/ab_i2001
+../Austin/th_S15_c0001-02001
+../Austin/ab_i2001
+../Austin/th_S15_c0000-02001
+../Austin/ab_i2001
+../Austin/th_S15_c000_1ms-02001
+../Austin/ab_i2001
+../Austin/th_S15_c0000-02001new
+Data_Froehlich/ab_ye532
+Data_Froehlich/th_projunk
+Data_Fisker/solar_ab_init
+Data_Fisker/th_aboveign_b1
+Data_Si02_fix/ab_he
+Data_Si02_fix/th_rosswog_4
+../Suzanne/new_qse/Calder_inab_6NSE2
+../Suzanne/new_qse/th_7948_NSE_start
+Data_Calder_fix/ab_he
+th_const
+Data_Calder_fix/ab_np
+th_const
+Data_Calder_fix/ab_ni
+th_const
+Data_p-rich_Cr/ab_init_P95
+N125_070600/th_02n
+Data_Froehlich/ab_ye532
+th_const
+Data_SN150/ab_co
+th_const
+Data_p-rich_Cr/ab_init_P95
+N125_070600/th_02n
+New18fpa/ab_init_P95
+N125_070600/th_02
+Data_alpha/ab_co
+th_guidry
+Data_Si02/ab_he
+../Rosswog/test_trajectories/th_rosswog_1
+Data_Si02/ab_he
+../Rosswog/test_trajectories/th_rosswog_2
+Data_Si02/ab_he
+../Rosswog/test_trajectories/th_rosswog_3
+Data_Si02/ab_he
+../Rosswog/test_trajectories/th_rosswog_5
+Data_Si02/ab_hen
+th_rosswog_3
+Data_Froehlich/ab_solar
+th_const
+Data_Star_ili2/ab_init_P95
+th_const
+    n    p  he4 fe56 fe72 ni56 ni78 zn80 se90sr102mo116pd128sn134xe146

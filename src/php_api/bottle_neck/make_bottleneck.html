@@ -1,0 +1,31 @@
+<?php
+/* vim: set filetype=php: */
+echo "<html><head><title>Bottleneck Result</title></head>\n";
+echo "<body>\n";
+include("bottle_neck_handlers.inc");
+include("../information.inc");
+$rtn= handle_create_input_data($run_comp);
+
+if($rtn !== false) {
+  echo "<h3> File creation might be a success</h3> \n";
+  echo "You should be able to access the file ";
+  echo " from this link: \n<ul>";
+  if(is_array($rtn) && array_key_exists(0,$rtn) && $rtn[0] !== false) {
+    echo '<li>Normal: <a href="http://s1.nucastrodata.org/phpd/cina_evaltest/bottle_neck/tmpdir/';
+  echo $rtn[0] . '">' . $rtn[0] . '</a>' . "\n";
+  }
+  else echo "<li>First file failed\n";
+  /*
+  if(is_array($rtn) && array_key_exists(1,$rtn) && $rtn[1] !== false) {
+    echo '<li>"Reverse": <a href="http://s1.nucastrodata.org/phpd/cina_evaltest/bottle_neck/tmpdir/';
+  echo $rtn[1] . '">' . $rtn[1] . '</a>' . "\n";
+  }
+  else echo "<li>Second file failed\n</ul>";
+  */
+  }
+else {
+  echo "<h3> File creation failed</h3>\n";
+  }
+echo "</html></body>\n";
+?>
+

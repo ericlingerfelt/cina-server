@@ -1,0 +1,3 @@
+chmod o-rwx -R *
+chgrp -R apache *
+chmod 750 classes/execute_*

@@ -1,0 +1,204 @@
+#!/bin/bash
+PATH=/bin:/usr/bin:/usr/local/bin:/usr/sbin:/sbin
+export PATH
+
+# Variables obtained from command-line
+C_CINA_PATH=$1
+shift
+C_ALIAS=$1
+shift
+C_EMAIL=$1
+shift
+C_SIM_PATH=$1
+shift
+C_PIC_PATH=$1
+shift
+C_SAVE_PATH=$1
+shift
+C_HEADER=$1
+shift
+C_ID=$1
+shift
+C_USERNAME=$1
+shift
+C_PW=$1
+shift
+C_SKIP_INTERVAL=$1
+shift
+C_COMP_FACTOR=$1
+shift
+C_SCALE_FACTOR=$1
+shift
+C_SEL_DEV=$1
+shift
+C_SEL_TIMEBOX=$1
+shift
+C_SEL_TIMESTEPBOX=$1
+shift
+C_SEL_DENSITYBOX=$1
+shift
+C_SEL_TEMPBOX=$1
+shift
+C_SEL_TITLEBOX=$1
+shift
+C_SEL_STABLEBOX=$1
+shift
+C_SEL_ISOLABELBOX=$1
+shift
+C_EXCUDE_OUTSIDE_RANGE=$1
+shift
+C_SHOW_BOX_OUTLINES=$1
+shift
+C_SEL_SUMFLUXES=$1
+shift
+C_SEL_ZONE=$1
+shift
+C_ARGS_TITLE=$1
+shift
+C_ARGS_FIRST_TIMESTEP=$1
+shift
+C_ARGS_LAST_TIMESTEP=$1
+shift
+C_ARGS_DATATYPE=$1
+shift
+C_ARGS_SCHEME=$1
+shift
+C_ARGS_REMAINING=$*
+
+# Non-command-line variables
+BIN_PATH=../$C_CINA_PATH/bin
+SERVER=nucastrodata2.ornl.gov
+WEB_PATH=$(/bin/echo "$C_SAVE_PATH" | /bin/sed 's/^.*html\///')
+
+# Usage: mm_exit BE_ERR* 'log message' err_number
+#        print message and exit with error
+function mm_exit {
+    if [ "$1" = "BE_ERR_SUCCESS" ]; then
+		exit
+    else
+		mm_error_email
+		/bin/echo $@
+		exit $3
+    fi
+}
+
+# Run java program to make pics
+function mm_makepics {
+	
+	# Delete pics in directory if they exist
+	/bin/rm -rf "$C_PIC_PATH/*"
+	
+	# Make directories
+    /bin/mkdir -p "$C_PIC_PATH" "$C_SAVE_PATH"
+	
+	# Execute movie maker program
+    /bin/java -Xms64m -Xmx2028m -Djava.awt.headless=true -cp "../$C_CINA_PATH/bin/MovieMaker" ElementSynthesisMovieMaker "$C_SIM_PATH" "$C_PIC_PATH" "$C_HEADER" "$C_ID" "$C_USERNAME" "$C_PW" "$C_SKIP_INTERVAL" "$C_COMP_FACTOR" "$C_SCALE_FACTOR" "$C_SEL_DEV" "$C_SEL_TIMEBOX" "$C_SEL_TIMESTEPBOX" "$C_SEL_DENSITYBOX" "$C_SEL_TEMPBOX" "$C_SEL_TITLEBOX" "$C_SEL_STABLEBOX" "$C_SEL_ISOLABELBOX" "$C_EXCUDE_OUTSIDE_RANGE" "$C_SHOW_BOX_OUTLINES" "$C_SEL_SUMFLUXES" "$C_SEL_ZONE" "$C_ARGS_TITLE" "$C_ARGS_FIRST_TIMESTEP" "$C_ARGS_LAST_TIMESTEP" "$C_ARGS_DATATYPE" "$C_ARGS_SCHEME" $C_ARGS_REMAINING &> "$C_SAVE_PATH/mm.out"
+    ES=$?
+
+	# Check for error
+    if [ "$ES" != "0" ]; then
+		cat "$C_SAVE_PATH/mm.out"
+		mm_exit BE_ERR_MOVIEMAKER 'stderr in mm.out' $ES
+    elif [ -f $C_PIC_PATH/00001.png ]; then
+		echo MovieMaker Complete
+    else
+		mm_exit BE_ERR_MOVIEMAKER2 'missing first image'
+    fi
+}
+
+# mm_escape_url string
+# set URL with escaped string
+function mm_escape_url {
+    URL=$(/bin/echo -n "$1" | $BIN_PATH/urlencode)
+}
+
+function mm_error_email {
+    /bin/echo -e \
+"From:\"Coordinator@nucastrodata.org\"<coordinator@nucastrodata.org>\n"\
+"To: \"$C_ALIAS\"<$C_EMAIL>\n"\
+"Cc: coordinator@nucastrodata.org\n"\
+"Bcc: eric@pandiasoftware.com\n"\
+"Subject: Element Synthesis Movie \"$C_ARGS_TITLE\" Problem\n"\
+"Dear $C_ALIAS,\n\n"\
+"An error occurred while rendering the element synthesis movie you requested within the Computational Infrastructure for Nuclear Astrophysics.  A bug report has been sent to the coordinator and the problem should be fixed shortly.\n\n"\
+"Simulation: $C_SIM_PATH\n"\
+"Title: $C_ARGS_TITLE\n\n"\
+"We apologize for this delay and appreciate your patience.\n\n"\
+"coordinator@nucastrodata.org\n"\
+"http://nucastrodata.org/"\
+    >> "$C_SAVE_PATH/email_error"
+
+#This should set the From line (-f) the Reply to (-r) info and then take the 
+#WRONG this does NOT set the from and to lines, it adds extra header fields that
+#are basically rely-to. The To: and From: in the body of the document are used
+#as the actual 'names' for from and to.
+# To Cc and Bcc from the input file (-t). 
+#In this case I have added eric@pandiasoftware.com,xrayburst1@yahoo.com,michael.smith@stellarsciencesolutions.com as a Bcc.
+# Also taking out the command path info because the PATH should now
+# be properly set.
+cat "$C_SAVE_PATH/email_error" | sendmail -f "coordinator@nucastrodata.org" -r "coordinator@nucastrodata.org" -t
+}
+
+function mm_email {
+    /bin/rm -f "$C_SAVE_PATH/email"
+    /bin/echo -e \
+"From:\"Coordinator@nucastrodata.org\"<coordinator@nucastrodata.org>\n"\
+"To: \"$C_ALIAS\"<$C_EMAIL>\n"\
+"Subject: Element Synthesis Movie \"$C_ARGS_TITLE\" Complete\n"\
+"Dear $C_ALIAS,\n\n"\
+"The element synthesis movie you requested within the Computational Infrastructure for Nuclear Astrophysics is complete.  You may download an MP4 movie of this animation with the link below.\n\n"\
+"Simulation: $C_SIM_PATH\n"\
+"Title: $C_ARGS_TITLE\n"\
+"Movie Link: https://$SERVER/$WEB_PATH/$URL$MOV_NAME\n" > "$C_SAVE_PATH/email"
+
+cat "$C_SAVE_PATH/email" | sendmail -f "coordinator@nucastrodata.org" -r "coordinator@nucastrodata.org" -t
+}
+
+function make_mp4 {
+
+	# Set the movie name and add mp4 extension
+    MOV_NAME=$(/bin/echo "$C_SIM_PATH" | /bin/sed 's/^.*\///')
+    MOV_NAME=$MOV_NAME".mp4"
+    PASSLOGFILE="$C_SAVE_PATH/passlogfile" 
+    
+    # Remove old movie by same name
+    /bin/rm -f "$C_SAVE_PATH/$MOV_NAME" 
+    
+	# Create first pass of movie
+	/bin/ffmpeg -y -i $C_PIC_PATH'/%*.png' -c:v libx264 -strict -2 -passlogfile $PASSLOGFILE -preset ultrafast -b:v 10000k -pass 1 -an -f mp4 /dev/null
+	
+	# Check for error
+	ES=$?
+    if [ "$ES" != "0" ]; then
+		mm_exit BE_ERR_MENCODER 'make_mp4' $ES
+    fi
+	
+ 	# Create second pass of movie and save to file
+	/bin/ffmpeg -y -i $C_PIC_PATH'/%*.png' -c:v libx264 -strict -2 -passlogfile $PASSLOGFILE -preset ultrafast -b:v 10000k -pass 2 -c:a aac -b:a 128k -vf format=yuv420p "$C_SAVE_PATH/$MOV_NAME"
+    
+    # Check for error 
+    ES=$?
+    if [ "$ES" != "0" ]; then
+		mm_exit BE_ERR_MENCODER 'make_mp4' $ES
+    fi
+    
+    # Remove images
+    /bin/rm -rf "$C_PIC_PATH"
+}
+
+# Check for missing arguments
+if [ -z "$C_ARGS_REMAINING" ]; then
+    mm_exit BE_ERR_INTERNAL "Missing arguments" 2
+fi
+
+# Run ElementSynthesisMovieMaker
+mm_makepics
+
+# Run FFMPEG
+make_mp4
+
+# Send email to user
+mm_email
+
+# Exit this process
+mm_exit BE_ERR_SUCCESS

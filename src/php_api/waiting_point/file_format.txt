@@ -1,0 +1,165 @@
+Well, the format of the waiting point input file has changed.  This is because 
+Tomomi and  Michael have changed the way that they process the information.
+The current method uses the bet+ creation and destruction rates and the fluxes
+for the other creation reactions as below.  The first two lines in the file
+are the same, but the time step header now has the flux normalization factor
+added to the end. This value is 1) the largest possible flux value of all the
+fluxes in the simulation and 2) divided into every flux that is printed. 
+
+Note: the output format specifiers are C not FORTRAN, and the value
+to the left of the decimal is the MINIMUM field width.  
+
+Note: the minimum (absolute) float value is 1.0E-30
+
+Then the new format is:
+
+___________________________
+num_isotopes(-2) (integer) we ignore n and p \N
+num_timesteps (integer) \N
+
+Then for each time step a single line with:
+______________________
+Time-step (integer %4d) normalized_time (%19.12E) Temperature (%0.6E double)
+Density (%13.6E) \N
+Abundance of p (1H) (%13.6E) at this timestep
+Abundance of 4He (%13.6E) at this timestep
+Flux Normalization Value (%13.6E) \N
+
+And last for each isotope (except p and n) all the non-integer values are (%13.6E)
+________________________
+Z (%3d) N (%3d) abundance rc1_rate rc2_flux rc3_flux rc4_flux rc5_flux
+rc6_flux rc7_flux rd1_rate \N
+*************************************************************************************************
+___________________________
+
+The format of the file we are talking about generating is as follows Please
+note that the fortran format Ew.d[Ee] as in E13.6 means a MAXWIDTH of 13 and 6
+digits to the right of the decimal.  The max width includes E, sign, sign of
+exp and exp which is why the language guide recommends setting w to 7 more
+than d to allow for all that. The [Ee] can be used to set the max width of the
+exponent.
+
+___________________________
+num_isotopes(-2) (integer) we ignore n and p \N
+num_timesteps (integer) \N
+
+Then for each time step
+______________________
+Time-step (integer %4d) normalized_time (%19.12E) Temperature (%0.6E double)
+Density (%13.6E) \N
+Abundance of p (1H) (%13.6E) at this timestep
+Abundance of 4He (%13.6E) at this timestep
+
+And last for each isotope (except p and n) all the non-int values are (%13.6E)
+________________________
+Z (%3d) N (%3d) abundance rc1 rc2 rc3 rc4 rc5 rc6 rc7 rd1 rd2 rd3 rd4 rd5 rd6 rd7 Qbc Q? 
+Q?? L \N
+
+***********************************************************************************************
+___________________________
+
+The reactions of interest for each isotope are
+
+rc1 - (Z+1,N-1)<bet+>(Z,N)
+/^[[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rc2 - (Z-1,N)<p,g>(Z,N)
+/^p + [[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rc3 - (Z-1,N-2)<a,p>(Z,N)
+/^4He + [[:alphanum:]]{1,5} --> p + [[:alphanum:]]{1,5}$/
+
+rc4 - (Z-2,N-2)<a,g>(Z,N)
+/^4He + [[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rc5 - (Z+1,N+2)<p,a>(Z,N)
+/^p + [[:alphanum:]]{1,5} --> 4He + [[:alphanum:]]{1,5}$/
+
+rc6 - (Z+1,N)<g,p>(Z,N)
+/^[[:alphanum:]]{1,5} --> p + [[:alphanum:]]{1,5}$/
+
+rc7 - (Z+2,N+2)<g,a>(Z,N)
+/^[[:alphanum:]]{1,5} --> 4He + [[:alphanum:]]{1,5}$/
+
+-----------------------------
+
+rd1 - (Z,N)<bet+>(Z-1,N+1)
+/^[[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rd2 - (Z,N)<p,g>(Z+1,N)
+/^p + [[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rd3 - (Z,N)<a,p>(Z+1,N+2)
+/^4He + [[:alphanum:]]{1,5} --> p + [[:alphanum:]]{1,5}$/
+
+rd4 - (Z,N)<a,g>(Z+2,N+2)
+/^4He + [[:alphanum:]]{1,5} --> [[:alphanum:]]{1,5}$/
+
+rd5 - (Z,N)<p,a>(Z-1,N-2)
+/^p + [[:alphanum:]]{1,5} --> 4He + [[:alphanum:]]{1,5}$/
+
+rd6 - (Z,N)<g,p>(Z-1,N)
+/^[[:alphanum:]]{1,5} --> p + [[:alphanum:]]{1,5}$/
+
+rd7 - (Z,N)<g,a>(Z-2,N-2)
+/^[[:alphanum:]]{1,5} --> 4He + [[:alphanum:]]{1,5}$/
+
+NOTE:
+For the Beta decay rates (rc1,rd1 and L), if there are any of bet+, ec or bec
+then if there are more than one, sum the ones that exit, if one use it, if
+none then set to 0.
+
+The Z N lines are repeated for every isotope in the selected range for each
+time step.  [It should be that the if the abundance is 0.0 (or not listed in
+the simulation) then that line is left out but we will see, and is not
+currently the case]
+
+The abundance is a double, the rates (rc1 ...) are all doubles and have been
+computed for the particular temperature.  
+Qbc is the Q-value for the reaction (Z,N)<p,g>(Z+1,N).  
+Q? is Q-value for (Z+2,N-1)<p,g>(Z+3,N-1) 
+Q?? is the Q-value for (Z,N-2)<a,p>(Z+1,N).  
+
+The value L is the "lifetime/halflife" of (Z+2,N-1)<b+>(Z+1,N) which is computed by
+ln(2)/exp(a1) for the decay reaction (a2 thru a7 should be 0.0 for this
+reaction).
+
+This information is then repeated for every timestep in the simulation. 
+
+If it is written in character data then there are a variable number of bytes
+per line else there are 4+o bytes for line 1, 8+o bytes for line 2 and 128+o
+bytes per line for each isotope.  The 'o' is the overhead of the fortran
+storage which is 8 bytes per line (record). FORTRAN uses "records" when
+writing "unformatted" data.  Each record consists of an integer (4-byte) value
+which is the number of bytes of the actual data, the data, and a repeat of the
+header integer.
+
+
+Solve the problem:
+ 1. read in the simulation time/temp/abundance data and cross-reference with
+ Z,N. This is just reading in the isomap, the abundance and the thermo.
+ The time/temp/abundance are all indexed by step number. The isomap contains
+ the Z,A (so N =A-Z) and an index, which index is also in the abundance
+ file. Also need to read the reaction map and the flux values.  The reaction
+ map is an indexed set of values which are in turn referenced back to the
+ isotope map.
+
+ I already have the basic data structures so this should be simple.
+
+ 1A. Then read in the reaction data as needed.  Once read though
+ save it in an array and check the array before reading it again. Saves
+ making a huge number of reads.  I wonder ... it would be as easy to make a
+ single query that selects all the z's in a range from the "weightings"
+ table and just put that in an array.
+
+ 2. get the rate data for that particular Z,N and compute rates for the
+ temperature. The formula is 
+
+ exp(a0 +a1T^-1 + a2T^-1/3 + a3T^1/3 +a4T +a5T^5/3 +a6ln(T));
+
+ where T is temperature in 10^9 Kelvin. If there are multiple parameter
+ sets, compute each set (partial rate) then sum the results for the final
+ rate
+
+ The Q values are simply looked up and the L(ifetime) is easily computed
+ from the a0 value of the rate for the reaction.  
